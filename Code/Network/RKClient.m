@@ -214,7 +214,17 @@ NSString *RKPathAppendQueryParams(NSString *resourcePath, NSDictionary *queryPar
 	return [RKURL URLWithBaseURLString:self.baseURL resourcePath:resourcePath queryParams:queryParams];
 }
 
-- (void)setupRequest:(RKRequest *)request {
+- (NSDictionary*)mergeDefaultParams:(NSDictionary*)existingParams {
+    if ([_defaultParams count] > 0) {
+        NSMutableDictionary *mergedParams = [NSMutableDictionary dictionaryWithDictionary:_defaultParams];
+        [mergedParams addEntriesFromDictionary:existingParams];
+        return mergedParams;
+    } else {
+        return existingParams;
+    }
+}
+
+- (void)setupRequest:(RKRequest *)request resourcePath:(NSString*)resourcePath params:(NSObject<RKRequestSerializable> *)params {
 	request.additionalHTTPHeaders = _HTTPHeaders;
     request.authenticationType = self.authenticationType;
 	request.username = self.username;
@@ -223,6 +233,14 @@ NSString *RKPathAppendQueryParams(NSString *resourcePath, NSDictionary *queryPar
     request.cache = self.requestCache;
     request.queue = self.requestQueue;
     request.reachabilityObserver = self.reachabilityObserver;
+
+    // Append default params
+    if (request.method == RKRequestMethodGET && params) {
+        NSURL* newResourcePathURL = [self URLForResourcePath:resourcePath queryParams:[self mergeDefaultParams:(NSDictionary*)params]];
+        request.URL = newResourcePathURL;
+    } else {
+        request.params = (NSObject<RKRequestSerializable> *)[self mergeDefaultParams:(NSDictionary*)params];
+    }
     
     // OAuth 1 Parameters
     request.OAuth1AccessToken = self.OAuth1AccessToken;
@@ -323,7 +341,7 @@ NSString *RKPathAppendQueryParams(NSString *resourcePath, NSDictionary *queryPar
 
 - (RKRequest *)requestWithResourcePath:(NSString *)resourcePath delegate:(NSObject<RKRequestDelegate> *)delegate {
 	RKRequest *request = [[RKRequest alloc] initWithURL:[self URLForResourcePath:resourcePath] delegate:delegate];
-	[self setupRequest:request];
+    [self setupRequest:request resourcePath:resourcePath params:nil];
 	[request autorelease];
 
 	return request;
@@ -333,31 +351,12 @@ NSString *RKPathAppendQueryParams(NSString *resourcePath, NSDictionary *queryPar
 // Asynchronous Requests
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (NSDictionary*)mergeDefaultParams:(NSDictionary*)existingParams {
-    if ([_defaultParams count] > 0) {
-        NSMutableDictionary *mergedParams = [NSMutableDictionary dictionaryWithDictionary:_defaultParams];
-        [mergedParams addEntriesFromDictionary:existingParams];
-        return mergedParams;
-    } else {
-        return existingParams;
-    }
-}
-
 - (RKRequest *)load:(NSString *)resourcePath method:(RKRequestMethod)method params:(NSObject<RKRequestSerializable> *)params delegate:(id)delegate {
 	NSURL* resourcePathURL = nil;
-	if (method == RKRequestMethodGET) {
-        resourcePathURL = [self URLForResourcePath:resourcePath queryParams:[self mergeDefaultParams:(NSDictionary*)params]];
-	} else {
-		resourcePathURL = [self URLForResourcePath:resourcePath];
-	}
+    resourcePathURL = [self URLForResourcePath:resourcePath];
 	RKRequest *request = [[RKRequest alloc] initWithURL:resourcePathURL delegate:delegate];
-	[self setupRequest:request];
+    [self setupRequest:request resourcePath:resourcePath params:params];
 	[request autorelease];
-	request.method = method;
-	if (method != RKRequestMethodGET) {
-		request.params = (NSObject<RKRequestSerializable> *)[self mergeDefaultParams:(NSDictionary*)params];
-	}
-    
     [request send];
 
 	return request;

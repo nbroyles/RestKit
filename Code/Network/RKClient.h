@@ -561,11 +561,13 @@ NSString *RKPathAppendQueryParams(NSString *resourcePath, NSDictionary *queryPar
  Configures a request with the headers and authentication settings applied to this client
  
  @param request A request to apply the configuration to
+ @param resourcePath The resource path of this request -- used to regenerate url if this is a get request with params -- can be nil if no params and/or is a post request
+ @param params Params to add to the request -- can be nil
  @see HTTPHeaders
  @see username
  @see password
  */
-- (void)setupRequest:(RKRequest *)request;
+- (void)setupRequest:(RKRequest *)request resourcePath:(NSString*)resourcePath params:(NSObject<RKRequestSerializable> *)params;
 
 /**
  Return a request object targetted at a resource path relative to the base URL. By default the method is set to GET

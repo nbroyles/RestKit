@@ -54,7 +54,7 @@
 - (id)initWithResourcePath:(NSString*)resourcePath objectManager:(RKObjectManager*)objectManager delegate:(id<RKObjectLoaderDelegate>)delegate {
 	if ((self = [super initWithURL:[objectManager.client URLForResourcePath:resourcePath] delegate:delegate])) {		
         _objectManager = objectManager;
-        [self.objectManager.client setupRequest:self];
+        [self.objectManager.client setupRequest:self resourcePath:resourcePath params:nil];
 	}
 
 	return self;
