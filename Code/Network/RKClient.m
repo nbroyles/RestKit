@@ -236,10 +236,8 @@ NSString *RKPathAppendQueryParams(NSString *resourcePath, NSDictionary *queryPar
 
     // Append default params -- it appears no request method
     // defaults to GET
-    if ((request.method == RKRequestMethodGET || !request.method)
-            && params) {
-        NSURL* newResourcePathURL = [self URLForResourcePath:resourcePath queryParams:[self mergeDefaultParams:(NSDictionary*)params]];
-        request.URL = newResourcePathURL;
+    if (request.method == RKRequestMethodGET || !request.method) {
+        request.URL = [self URLForResourcePath:resourcePath queryParams:[self mergeDefaultParams:(NSDictionary*)params]];
     } else {
         request.params = (NSObject<RKRequestSerializable> *)[self mergeDefaultParams:(NSDictionary*)params];
     }
