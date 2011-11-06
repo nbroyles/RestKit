@@ -234,8 +234,10 @@ NSString *RKPathAppendQueryParams(NSString *resourcePath, NSDictionary *queryPar
     request.queue = self.requestQueue;
     request.reachabilityObserver = self.reachabilityObserver;
 
-    // Append default params
-    if (request.method == RKRequestMethodGET && params) {
+    // Append default params -- it appears no request method
+    // defaults to GET
+    if ((request.method == RKRequestMethodGET || !request.method)
+            && params) {
         NSURL* newResourcePathURL = [self URLForResourcePath:resourcePath queryParams:[self mergeDefaultParams:(NSDictionary*)params]];
         request.URL = newResourcePathURL;
     } else {
@@ -355,6 +357,7 @@ NSString *RKPathAppendQueryParams(NSString *resourcePath, NSDictionary *queryPar
 	NSURL* resourcePathURL = nil;
     resourcePathURL = [self URLForResourcePath:resourcePath];
 	RKRequest *request = [[RKRequest alloc] initWithURL:resourcePathURL delegate:delegate];
+    request.method = method;
     [self setupRequest:request resourcePath:resourcePath params:params];
 	[request autorelease];
     [request send];
