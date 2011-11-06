@@ -79,6 +79,7 @@ NSString *RKPathAppendQueryParams(NSString *resourcePath, NSDictionary *queryPar
 @synthesize OAuth2AccessToken = _OAuth2AccessToken;
 @synthesize OAuth2RefreshToken = _OAuth2RefreshToken;
 @synthesize HTTPHeaders = _HTTPHeaders;
+@synthesize defaultParams = _defaultParams;
 #ifdef RESTKIT_SSL_VALIDATION
 @synthesize additionalRootCertificates = _additionalRootCertificates;
 #endif
@@ -117,6 +118,7 @@ NSString *RKPathAppendQueryParams(NSString *resourcePath, NSDictionary *queryPar
     self = [super init];
 	if (self) {
 		_HTTPHeaders = [[NSMutableDictionary alloc] init];
+		_defaultParams = [[NSMutableDictionary alloc] init];
         _additionalRootCertificates = [[NSMutableSet alloc] init];
 		self.serviceUnavailableAlertEnabled = NO;
 		self.serviceUnavailableAlertTitle = NSLocalizedString(@"Service Unavailable", nil);
@@ -173,6 +175,7 @@ NSString *RKPathAppendQueryParams(NSString *resourcePath, NSDictionary *queryPar
     self.serviceUnavailableAlertMessage = nil;
     self.requestCache = nil;
     [_HTTPHeaders release];
+    [_defaultParams release];
     [_additionalRootCertificates release];
 
     [super dealloc];
@@ -235,6 +238,11 @@ NSString *RKPathAppendQueryParams(NSString *resourcePath, NSDictionary *queryPar
 - (void)setValue:(NSString *)value forHTTPHeaderField:(NSString *)header {
 	[_HTTPHeaders setValue:value forKey:header];
 }
+
+- (void)setValue:(NSString *)value forDefaultParam:(NSString *)param {
+	[_defaultParams setValue:value forKey:param];
+}
+
 
 #ifdef RESTKIT_SSL_VALIDATION
 - (void)addRootCertificate:(SecCertificateRef)cert {
@@ -325,10 +333,20 @@ NSString *RKPathAppendQueryParams(NSString *resourcePath, NSDictionary *queryPar
 // Asynchronous Requests
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+- (NSDictionary*)mergeDefaultParams:(NSDictionary*)existingParams {
+    if ([_defaultParams count] > 0) {
+        NSMutableDictionary *mergedParams = [NSMutableDictionary dictionaryWithDictionary:_defaultParams];
+        [mergedParams addEntriesFromDictionary:existingParams];
+        return mergedParams;
+    } else {
+        return existingParams;
+    }
+}
+
 - (RKRequest *)load:(NSString *)resourcePath method:(RKRequestMethod)method params:(NSObject<RKRequestSerializable> *)params delegate:(id)delegate {
 	NSURL* resourcePathURL = nil;
 	if (method == RKRequestMethodGET) {
-		resourcePathURL = [self URLForResourcePath:resourcePath queryParams:(NSDictionary*)params];
+        resourcePathURL = [self URLForResourcePath:resourcePath queryParams:[self mergeDefaultParams:(NSDictionary*)params]];
 	} else {
 		resourcePathURL = [self URLForResourcePath:resourcePath];
 	}
@@ -337,7 +355,7 @@ NSString *RKPathAppendQueryParams(NSString *resourcePath, NSDictionary *queryPar
 	[request autorelease];
 	request.method = method;
 	if (method != RKRequestMethodGET) {
-		request.params = params;
+		request.params = (NSObject<RKRequestSerializable> *)[self mergeDefaultParams:(NSDictionary*)params];
 	}
     
     [request send];

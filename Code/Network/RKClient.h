@@ -164,6 +164,7 @@ NSString *RKPathAppendQueryParams(NSString *resourcePath, NSDictionary *queryPar
     NSString *_OAuth2AccessToken;
     NSString *_OAuth2RefreshToken;
 	NSMutableDictionary *_HTTPHeaders;
+	NSMutableDictionary *_defaultParams;
 	RKReachabilityObserver *_reachabilityObserver;
 	NSString *_serviceUnavailableAlertTitle;
 	NSString *_serviceUnavailableAlertMessage;
@@ -198,6 +199,11 @@ NSString *RKPathAppendQueryParams(NSString *resourcePath, NSDictionary *queryPar
  A dictionary of headers to be sent with each request
  */
 @property (nonatomic, readonly) NSMutableDictionary *HTTPHeaders;
+
+/**
+ A dictionary of parameters to be sent with each request -- useful for tokens
+ */
+@property (nonatomic, readonly) NSMutableDictionary *defaultParams;
 
 /**
  Accept all SSL certificates. This is a potential security exposure,
@@ -235,6 +241,15 @@ NSString *RKPathAppendQueryParams(NSString *resourcePath, NSDictionary *queryPar
  * @see HTTPHeaders
  */
 - (void)setValue:(NSString *)value forHTTPHeaderField:(NSString *)header;
+
+/**
+ * Adds a request parameter to each request dispatched through the client
+ * 
+ * @param value The string value to set for the request
+ * @param param The name of the parameter
+ * @see defaultParams
+ */
+- (void)setValue:(NSString *)value forDefaultParam:(NSString *)param;
 
 /////////////////////////////////////////////////////////////////////////
 /// @name SSL Validation
