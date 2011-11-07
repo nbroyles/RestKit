@@ -1,3 +1,25 @@
+Fork Information
+=========================
+
+The following method has been added to the RKClient object:
+
+    /**
+    * Adds a request parameter to each request dispatched through the client
+    *   
+    * @param value The string value to set for the request
+    * @param param The name of the parameter
+    * @see defaultParams
+    */
+    - (void)setValue:(NSString *)value forDefaultParam:(NSString *)param;
+
+which is used in this fashion:
+
+     [objectManager.client setValue:user.authenticationToken forDefaultParam:kAccessTokenQueryParam];   
+
+Works across request methods.
+
+--- Standard RestKit Documentation Below ---
+
 Introduction
 =========================
 
